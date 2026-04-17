@@ -1,0 +1,10 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /home/ec2-user/proyecto
+hooks:
+  AfterInstall:
+    - location: procesar.py
+      timeout: 300
+      runas: ec2-user

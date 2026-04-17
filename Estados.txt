@@ -1,0 +1,6 @@
+Estado,Temperatura,Humedad,Costo_Alojamiento
+Aguascalientes,24,45,900
+Baja California,28,40,1200
+Ciudad de Mexico,20,60,1300
+Estado de Mexico,19,55,1000
+Jalisco,26,55,1200
