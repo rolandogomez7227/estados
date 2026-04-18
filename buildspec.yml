@@ -7,16 +7,11 @@ phases:
   build:
     commands:
       - echo "Ejecutando el script de procesamiento..."
-      - python3 procesar.py
+      - [cite_start]python3 procesar.py [cite: 8, 28]
   post_build:
     commands:
       - echo "Validando que el archivo resultado.txt fue generado correctamente..."
-      - |
-        if [ -f resultado.txt ]; then 
-          echo "Validacion exitosa: archivo encontrado"; 
-        else 
-          echo "Error: resultado.txt no existe" && exit 1; 
-        fi
+      - test -f resultado.txt && echo "Archivo encontrado" || (echo "Error: resultado.txt no existe" && exit 1) [cite_start][cite: 9, 29]
 
 artifacts:
   files:
