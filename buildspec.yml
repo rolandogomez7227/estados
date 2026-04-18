@@ -6,13 +6,13 @@ phases:
       python: 3.9
   build:
     commands:
-      - echo "Ejecutando el script de procesamiento..."
+      - echo "Ejecutando el script..."
       - python3 procesar.py
   post_build:
     commands:
-      - echo "Validando que el archivo resultado.txt fue generado correctamente..."
-      - test -f resultado.txt && echo "Archivo encontrado" || (echo "Error: archivo no generado" && exit 1)
-
+      - echo "Validando resultado.txt..."
+      - ls -l resultado.txt
+      - test -f resultado.txt
 artifacts:
   files:
-    - '**/*'
+    - '**/* '
