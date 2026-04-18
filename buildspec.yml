@@ -6,12 +6,18 @@ phases:
       python: 3.9
   build:
     commands:
-      - echo "Ejecutando script de procesamiento..."
+      - echo "Ejecutando el script de procesamiento..."
       - python3 procesar.py
   post_build:
     commands:
-      - echo "Validando archivo generado..."
-      - if [ -f resultado.txt ]; then echo "Validacion exitosa"; else echo "Error: Archivo no generado" && exit 1; fi
+      - echo "Validando que el archivo resultado.txt fue generado correctamente..."
+      - |
+        if [ -f resultado.txt ]; then 
+          echo "Validacion exitosa: archivo encontrado"; 
+        else 
+          echo "Error: resultado.txt no existe" && exit 1; 
+        fi
+
 artifacts:
   files:
     - '**/*'
