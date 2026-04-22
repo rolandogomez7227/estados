@@ -1,29 +1,35 @@
-import os
+import boto3
+import json
+import uuid
 
-def procesar():
-    print("Iniciando el procesamiento de datos...")
-    # Creamos datos de prueba si no existe data.txt para que no falle
-    datos_ejemplo = "Estado,Temp\nAguascalientes,24\nCDMX,20\nEdomex,19\nJalisco,26\nNuevo Leon,28"
+# Configuración de DynamoDB
+dynamodb = boto3.resource('dynamodb', region_name='us-east-2')
+tabla = dynamodb.Table('EstadosTabla')
+
+def procesar_archivo_a_dynamo():
+    archivo_entrada = 'Estados.txt'
     
-    if not os.path.exists('data.txt'):
-        with open('data.txt', 'w') as f:
-            f.write(datos_ejemplo)
-
     try:
-        with open('data.txt', 'r') as f:
+        with open(archivo_entrada, 'r', encoding='utf-8') as f:
             lineas = f.readlines()
-        
-        # Generamos el archivo de resultados
-        with open('resultado.txt', 'w') as f_out:
-            f_out.write("Resultados del procesamiento AWS\n")
-            f_out.write("------------------------------\n")
-            for linea in lineas[1:]: # Saltamos encabezado
-                f_out.write(f"Procesado: {linea}")
-        
-        print("Archivo resultado.txt creado exitosamente.")
+            
+        for linea in lineas:
+            dato = linea.strip()
+            if not dato: continue
+            
+            # Crear el formato JSON para la tabla
+            item = {
+                'EstadoID': str(uuid.uuid4()), # Genera un ID único
+                'NombreEstado': dato,
+                'FechaRegistro': boto3.datetime.datetime.now().isoformat()
+            }
+            
+            # Subir a DynamoDB
+            tabla.put_item(Item=item)
+            print(f"Subido con éxito: {dato}")
+            
     except Exception as e:
-        print(f"Error procesando: {e}")
-        exit(1)
+        print(f"Error: {e}")
 
 if __name__ == "__main__":
-    procesar() 
+    procesar_archivo_a_dynamo()
