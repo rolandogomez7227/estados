@@ -19,9 +19,9 @@ def procesar_archivo_a_dynamo():
             
             # Crear el formato JSON para la tabla
             item = {
-                'EstadoID': str(uuid.uuid4()), # Genera un ID único
+                'EstadoID': str(uuid.uuid4()),
                 'NombreEstado': dato,
-                'FechaRegistro': boto3.datetime.datetime.now().isoformat()
+                'FechaRegistro': datetime.now().isoformat()
             }
             
             # Subir a DynamoDB
