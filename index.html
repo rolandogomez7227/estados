@@ -1,63 +1,45 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Dashboard de Estados - Tecmilenio</title>
-    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1350.0.min.js"></script>
-    <style>
-        body { font-family: Arial; padding: 20px; background-color: #f4f4f4; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #004a99; color: white; }
-    </style>
-</head>
-<body>
-    <h1>Información de Estados desde DynamoDB</h1>
-    <table id="tabla-estados">
-        <thead>
-            <tr>
-                <th>Estado</th>
-                <th>Temperatura</th>
-                <th>Humedad</th>
-                <th>Costo Alojamiento</th>
-            </tr>
-        </thead>
-        <tbody>
-            </tbody>
-    </table>
+<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1350.0.min.js"></script>
+<script>
+    // 1. CONFIGURACIÓN DE CREDENCIALES (Cópialas de AWS Details -> CLI)
+    AWS.config.update({
+        region: 'us-east-2',
+        accessKeyId: 'TU_ACCESS_KEY_ID',
+        secretAccessKey: 'TU_SECRET_ACCESS_KEY',
+        sessionToken: 'TU_SESSION_TOKEN_MUY_LARGO' // ¡Este es obligatorio!
+    });
 
-    <script>
-        // CONFIGURACIÓN DE AWS (Usa tus llaves temporales del Learner Lab)
-        AWS.config.update({
-            region: 'us-east-2',
-            accessKeyId: 'TU_ACCESS_KEY',
-            secretAccessKey: 'TU_SECRET_KEY',
-            sessionToken: 'TU_SESSION_TOKEN' // Obligatorio en AWS Academy
+    const docClient = new AWS.DynamoDB.DocumentClient();
+
+    function obtenerDatos() {
+        const params = {
+            TableName: "EstadosTabla" // Asegúrate que se llame exactamente así
+        };
+
+        docClient.scan(params, function(err, data) {
+            if (err) {
+                console.error("Error al leer de DynamoDB:", err);
+                alert("Error de conexión: Revisa tus credenciales");
+            } else {
+                console.log("Datos recibidos:", data);
+                const tableBody = document.querySelector("#tabla-estados tbody");
+                
+                // Limpiamos la tabla por si acaso
+                tableBody.innerHTML = "";
+
+                data.Items.forEach(function(item) {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${item.Estado || 'N/A'}</td>
+                        <td>${item.Temperatura || '0'}°C</td>
+                        <td>${item.Humedad || '0'}%</td>
+                        <td>$${item.Costo_Alojamiento || '0'}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
         });
+    }
 
-        const docClient = new AWS.DynamoDB.DocumentClient();
-
-        function cargarDatos() {
-            const params = { TableName: "EstadosTabla" };
-
-            docClient.scan(params, function(err, data) {
-                if (err) {
-                    console.error("Error", err);
-                } else {
-                    const tbody = document.querySelector("#tabla-estados tbody");
-                    data.Items.forEach(function(item) {
-                        const fila = `<tr>
-                            <td>${item.Estado}</td>
-                            <td>${item.Temperatura}°C</td>
-                            <td>${item.Humedad}%</td>
-                            <td>$${item.Costo_Alojamiento}</td>
-                        </tr>`;
-                        tbody.innerHTML += fila;
-                    });
-                }
-            });
-        }
-        cargarDatos();
-    </script>
-</body>
-</html>
+    // Ejecutar la función al cargar la página
+    window.onload = obtenerDatos;
+</script>
