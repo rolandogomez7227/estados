@@ -2,11 +2,21 @@ import boto3
 import uuid
 import csv
 from datetime import datetime
-from decimal import Decimal
 
-# ── 1. SUBIR DATOS A DYNAMODB ──────────────────────────────────────────────
 dynamodb = boto3.resource('dynamodb', region_name='us-east-2')
-table = dynamodb.Table('EstadosTabla')
+table = dynamodb.Table('EstadosMexico')  # ← nueva tabla
+
+def limpiar_tabla():
+    """Borra todos los items antes de subir datos frescos"""
+    print("Limpiando tabla...")
+    response = table.scan()
+    items = response['Items']
+    
+    with table.batch_writer() as batch:
+        for item in items:
+            batch.delete_item(Key={'EstadoID': item['EstadoID']})
+    
+    print(f"{len(items)} registros eliminados.")
 
 def procesar_datos():
     archivo_entrada = 'Estados.txt'
@@ -40,13 +50,11 @@ def procesar_datos():
         print(f"Error al procesar datos: {e}")
         exit(1)
 
-# ── 2. LEER DYNAMODB Y GENERAR HTML ───────────────────────────────────────
 def generar_html():
     try:
         response = table.scan()
         items = response['Items']
 
-        # Construir filas de la tabla
         filas_html = ""
         for item in items:
             filas_html += f"""
@@ -116,10 +124,10 @@ def generar_html():
         print(f"Error al generar HTML: {e}")
         exit(1)
 
-# ── 3. MAIN ────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    procesar_datos()
-    generar_html()
+    limpiar_tabla()      # 1. Limpia tabla
+    procesar_datos()     # 2. Sube datos frescos
+    generar_html()       # 3. Genera HTML
 
     with open('resultado.txt', 'w') as res:
         res.write(f"Proceso completado: {datetime.now().isoformat()}")
