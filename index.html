@@ -1,33 +1,177 @@
-<script>
-    const API_URL = 'https://TU_ID.execute-api.us-east-2.amazonaws.com/estados';
-
-    async function obtenerDatos() {
-        try {
-            const response = await fetch(API_URL);
-            
-            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
-            
-            const items = await response.json();
-            const tableBody = document.querySelector("#tabla-estados tbody");
-            tableBody.innerHTML = "";
-
-            items.forEach(function(item) {
-                const row = document.createElement("tr");
-                row.innerHTML = `
-                    <td>${item.Estado || 'N/A'}</td>
-                    <td>${item.Temperatura || '0'}°C</td>
-                    <td>${item.Humedad || '0'}%</td>
-                    <td>$${item.Costo_Alojamiento || '0'}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-
-        } catch (error) {
-            console.error("Error al obtener datos:", error);
-            document.querySelector("#tabla-estados tbody").innerHTML = 
-                `<tr><td colspan="4" style="color:red">Error al cargar datos: ${error.message}</td></tr>`;
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Estados</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            padding: 30px;
         }
-    }
 
-    window.onload = obtenerDatos;
-</script>
+        h1 {
+            color: #1a1a2e;
+            margin-bottom: 24px;
+            font-size: 1.8rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #1447a6;
+            color: white;
+        }
+
+        thead th {
+            padding: 14px 20px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9rem;
+            letter-spacing: 0.5px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+
+        tbody tr:hover { background: #f7f9ff; }
+
+        tbody td {
+            padding: 13px 20px;
+            color: #333;
+            font-size: 0.95rem;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+            font-size: 1rem;
+        }
+
+        .error {
+            text-align: center;
+            padding: 30px;
+            color: #e74c3c;
+        }
+
+        .badge-temp {
+            background: #fff3cd;
+            color: #856404;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-hum {
+            background: #d1ecf1;
+            color: #0c5460;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-cost {
+            background: #d4edda;
+            color: #155724;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📊 Información de Estados desde DynamoDB</h1>
+
+    <div class="card">
+        <table id="tabla-estados">
+            <thead>
+                <tr>
+                    <th>Estado</th>
+                    <th>Temperatura</th>
+                    <th>Humedad</th>
+                    <th>Costo Alojamiento</th>
+                    <th>Costo Transporte</th>
+                    <th>Días Promedio</th>
+                    <th>Tiempo Traslado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="loading">⏳ Cargando datos...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // ⚠️ CAMBIA ESTA URL por la de tu API Gateway
+        const API_URL = 'https://TU_ID.execute-api.us-east-2.amazonaws.com/estados';
+
+        async function obtenerDatos() {
+            const tbody = document.querySelector("#tabla-estados tbody");
+
+            try {
+                const response = await fetch(API_URL);
+
+                if (!response.ok) throw new Error(`Error HTTP ${response.status}`);
+
+                const items = await response.json();
+
+                if (!items || items.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="loading">No hay datos en la tabla.</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = "";
+
+                items.forEach(item => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td><strong>${item.Estado || 'N/A'}</strong></td>
+                        <td><span class="badge-temp">${item.Temperatura || '0'}°C</span></td>
+                        <td><span class="badge-hum">${item.Humedad || '0'}%</span></td>
+                        <td><span class="badge-cost">$${item.Costo_Alojamiento || '0'}</span></td>
+                        <td>$${item.Costo_Transporte || '0'}</td>
+                        <td>${item.Dias_Promedio || '0'} días</td>
+                        <td>${item.Tiempo_Traslado || 'N/A'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+            } catch (error) {
+                console.error("Error:", error);
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="error">
+                            Error al cargar: <strong>${error.message}</strong><br>
+                            <small>Revisa la consola del navegador (F12) para más detalles.</small>
+                        </td>
+                    </tr>`;
+            }
+        }
+
+        window.onload = obtenerDatos;
+    </script>
+
+</body>
+</html> 

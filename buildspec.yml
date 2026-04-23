@@ -5,19 +5,17 @@ phases:
     runtime-versions:
       python: 3.9
     commands:
-      - echo "Instalando dependencias..."
-      # Instalamos boto3 para que el script pueda hablar con DynamoDB
       - pip install boto3
+
   build:
     commands:
-      - echo "Ejecutando el script..."
-      # Asegúrate de que el nombre del archivo sea procesar.py como dice tu log
       - python3 procesar.py
+
   post_build:
     commands:
-      - echo "Validando resultado.txt..."
-      # Usamos un condicional para que no falle si el archivo no existe por alguna razón
-      - if [ -f resultado.txt ]; then ls -l resultado.txt; else echo "Archivo no encontrado"; fi
+      - if [ -f resultado.txt ]; then cat resultado.txt; else echo "No se generó resultado.txt"; fi
+      - aws s3 cp index.html s3://automatizacion-tecmilenio/index.html --content-type "text/html"
+
 artifacts:
   files:
-    - '**/*' 
+    - '**/*'
