@@ -1,45 +1,33 @@
-<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1350.0.min.js"></script>
 <script>
-    // 1. CONFIGURACIÓN DE CREDENCIALES (Cópialas de AWS Details -> CLI)
-    AWS.config.update({
-        region: 'us-east-2',
-        accessKeyId: 'TU_ACCESS_KEY_ID',
-        secretAccessKey: 'TU_SECRET_ACCESS_KEY',
-        sessionToken: 'TU_SESSION_TOKEN_MUY_LARGO' // ¡Este es obligatorio!
-    });
+    const API_URL = 'https://TU_ID.execute-api.us-east-2.amazonaws.com/estados';
 
-    const docClient = new AWS.DynamoDB.DocumentClient();
+    async function obtenerDatos() {
+        try {
+            const response = await fetch(API_URL);
+            
+            if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+            
+            const items = await response.json();
+            const tableBody = document.querySelector("#tabla-estados tbody");
+            tableBody.innerHTML = "";
 
-    function obtenerDatos() {
-        const params = {
-            TableName: "EstadosTabla" // Asegúrate que se llame exactamente así
-        };
+            items.forEach(function(item) {
+                const row = document.createElement("tr");
+                row.innerHTML = `
+                    <td>${item.Estado || 'N/A'}</td>
+                    <td>${item.Temperatura || '0'}°C</td>
+                    <td>${item.Humedad || '0'}%</td>
+                    <td>$${item.Costo_Alojamiento || '0'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
 
-        docClient.scan(params, function(err, data) {
-            if (err) {
-                console.error("Error al leer de DynamoDB:", err);
-                alert("Error de conexión: Revisa tus credenciales");
-            } else {
-                console.log("Datos recibidos:", data);
-                const tableBody = document.querySelector("#tabla-estados tbody");
-                
-                // Limpiamos la tabla por si acaso
-                tableBody.innerHTML = "";
-
-                data.Items.forEach(function(item) {
-                    const row = document.createElement("tr");
-                    row.innerHTML = `
-                        <td>${item.Estado || 'N/A'}</td>
-                        <td>${item.Temperatura || '0'}°C</td>
-                        <td>${item.Humedad || '0'}%</td>
-                        <td>$${item.Costo_Alojamiento || '0'}</td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            }
-        });
+        } catch (error) {
+            console.error("Error al obtener datos:", error);
+            document.querySelector("#tabla-estados tbody").innerHTML = 
+                `<tr><td colspan="4" style="color:red">Error al cargar datos: ${error.message}</td></tr>`;
+        }
     }
 
-    // Ejecutar la función al cargar la página
     window.onload = obtenerDatos;
 </script>
