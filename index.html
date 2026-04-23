@@ -1,17 +1,63 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <title>Resultados AWS Pipeline</title>
     <meta charset="UTF-8">
+    <title>Dashboard de Estados - Tecmilenio</title>
+    <script src="https://sdk.amazonaws.com/js/aws-sdk-2.1350.0.min.js"></script>
+    <style>
+        body { font-family: Arial; padding: 20px; background-color: #f4f4f4; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #004a99; color: white; }
+    </style>
 </head>
 <body>
-    <h1>Resultados del Procesamiento de Estados</h1>
-    <div id="contenido">
-        <p>Cargando resultados desde la instancia...</p>
-    </div>
+    <h1>Información de Estados desde DynamoDB</h1>
+    <table id="tabla-estados">
+        <thead>
+            <tr>
+                <th>Estado</th>
+                <th>Temperatura</th>
+                <th>Humedad</th>
+                <th>Costo Alojamiento</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
     <script>
-        // Nota: En un entorno real, aquí harías un fetch a la IP de tu EC2
-        console.log("Pipeline ejecutado correctamente.");
+        // CONFIGURACIÓN DE AWS (Usa tus llaves temporales del Learner Lab)
+        AWS.config.update({
+            region: 'us-east-2',
+            accessKeyId: 'TU_ACCESS_KEY',
+            secretAccessKey: 'TU_SECRET_KEY',
+            sessionToken: 'TU_SESSION_TOKEN' // Obligatorio en AWS Academy
+        });
+
+        const docClient = new AWS.DynamoDB.DocumentClient();
+
+        function cargarDatos() {
+            const params = { TableName: "EstadosTabla" };
+
+            docClient.scan(params, function(err, data) {
+                if (err) {
+                    console.error("Error", err);
+                } else {
+                    const tbody = document.querySelector("#tabla-estados tbody");
+                    data.Items.forEach(function(item) {
+                        const fila = `<tr>
+                            <td>${item.Estado}</td>
+                            <td>${item.Temperatura}°C</td>
+                            <td>${item.Humedad}%</td>
+                            <td>$${item.Costo_Alojamiento}</td>
+                        </tr>`;
+                        tbody.innerHTML += fila;
+                    });
+                }
+            });
+        }
+        cargarDatos();
     </script>
 </body>
 </html>
